@@ -1,3 +1,6 @@
+//TODO: adds too many fields to body when eating
+//TODO: food can be created in snake
+
 /*--------- Variables --------- */
 
 var fieldSize = 15*13;
