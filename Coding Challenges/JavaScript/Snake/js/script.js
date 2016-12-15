@@ -1,9 +1,6 @@
-//TODO: adds too many fields to body when eating
-//TODO: food can be created in snake
-
 /*--------- Variables --------- */
-var rows = 13;
-var columns = 15;
+var rows = 20;
+var columns = 30;
 var fieldSize = rows * columns;
 var directions = { 38: "up", 40: "down", 37 : "left", 39: "right"};
 
@@ -19,7 +16,9 @@ var colors;
 var gameLoop;
 var foodField;
 var ateFood;
-var stepSpeed = 150;
+var tat;
+var squareSize = 30;
+var stepSpeed = 500;
 
 /*-------------- Game Functions ---------- */
 
@@ -27,7 +26,6 @@ function addFieldToBody(field) {
     snake.queue.unshift(field);
     snake.ids.unshift(field.id);
     field.classList.add("snake");
-//    field.classList.remove("field");
 }
 
 function setupHead(field) {
@@ -57,7 +55,6 @@ function removeTail() {
     snake.ids.pop();
     snake.tail.classList.remove("tail");
     snake.tail.classList.remove("snake");
-//    snake.tail.style["background-color"] = "white";
     makeTail();
 }
 
@@ -74,8 +71,13 @@ function makeHead(field) {
 
 /*-------------- Setup Functions ---------- */
 
+function bodyWidth() {
+    var width = columns * squareSize;
+    document.body.style["max-width"] = width + "px";
+}
+
 function initSnake() {
-    var center = document.getElementById(Math.floor(fieldSize/2));
+    var center = document.getElementById(Math.floor((fieldSize + columns)/2 ));
     setupHead(center);
     setupTail(center);
     snake.queue.pop(); //remove duplicate
@@ -106,10 +108,10 @@ function getNextHead() {
     var head = snake.head;
     switch(snake.direction) {
         case "up" :
-            nextHead = document.getElementById(parseInt(head.id) - 15);
+            nextHead = document.getElementById(parseInt(head.id) - columns);
             break;
         case "down":
-            nextHead = document.getElementById(parseInt(head.id) + 15);
+            nextHead = document.getElementById(parseInt(head.id) + columns);
             break;
         case "left":
             nextHead = document.getElementById(parseInt(head.id) - 1);
@@ -132,6 +134,10 @@ function moveSnake(nextHead) {
     }
 }
 
+
+/*
+Not in use
+*/
 function colorSnake() {
     for (var i = 1; i < snake.queue.length; i++) {
         snake.queue[i].style["background-color"] = "rgb(" + colors[0] + ","+ (colors[1] + i) + "," + colors[2] + ")";
@@ -168,6 +174,7 @@ function initGameLoop() {
     }, stepSpeed);
 }
 
+//Not in use
 function getBaseColor() {
     var rgb = window.getComputedStyle(snake.head).color;
     colors = rgb.replace("rgb(", '').replace(")", '').split(', ');
@@ -176,10 +183,43 @@ function getBaseColor() {
     colors[2] = parseInt(colors[2]);
 }
 
+/*
+
+Tilt and Tap Code
+
+*/
+function left() {
+    snake.direction = "left";
+}
+
+function right() {
+    snake.direction = "right";
+}
+
+function up() {
+    snake.direction = "up";
+}
+
+function down() {
+    snake.direction = "down";
+}
+
+
+function setupTat () {
+    tat = new tiltandtap({
+        tiltLeft: { callback : left},
+        tiltRight: { callback : right},
+        tiltUp: { callback : up},
+        tiltRight: { callback : down},
+    });
+}
+
 function setup() {
+    bodyWidth();
     drawField();
     markBorder();
     initSnake();
+    setupTat();
     getBaseColor();
     createFood();
     initGameLoop();
@@ -188,16 +228,17 @@ function setup() {
 function markBorder() {
     var fields = document.getElementsByClassName("field");
     for(var i = 0; i < fieldSize; i++) {
-        if (i < 15) {
+        if (i < columns) {
             fields[i].setAttribute("dir", "up");
         }
-        if (i % 15 === 0) {
+        else if (i % columns === 0) {
             fields[i].setAttribute("dir", "left");
         }
-        if (i % 15 === 14) {
+        else if (i % columns === (columns-1)) {
             fields[i].setAttribute("dir", "right");
+            console.log(i, i % columns);
         }
-        if (i > fieldSize-rows) {
+        else if (i > fieldSize-rows) {
             fields[i].setAttribute("dir", "down");
         }
     }
@@ -208,18 +249,22 @@ function drawField() {
     for (var i = 0; i < fieldSize; i++) {
         var div = document.createElement("div");
         div.id = i;
-        div.setAttribute("row", Math.floor(i / 15) + 1);
-        div.setAttribute("column", i % 15 + 1);
+        div.setAttribute("row", Math.floor(i / rows));
+        div.setAttribute("column", i % columns + 1);
         div.classList.add("field");
+        div.style.width = squareSize + "px";
+        div.style.height = squareSize + "px";
         body.appendChild(div);
     }
 };
 
 document.addEventListener('DOMContentLoaded', setup, false);
-document.onkeydown = function(e) {
-    e = e || window.event;
-    var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
-    if([37,38,39,40].includes(parseInt(charCode))) {
-        snake.direction = directions[charCode.toString()];
-    }
-};
+
+//Desktop Controls
+//document.onkeydown = function(e) {
+//    e = e || window.event;
+//    var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
+//    if([37,38,39,40].includes(parseInt(charCode))) {
+//        snake.direction = directions[charCode.toString()];
+//    }
+//};
