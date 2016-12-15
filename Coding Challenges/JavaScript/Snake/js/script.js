@@ -23,7 +23,7 @@ var foodField;
 var ateFood;
 var tat;
 var squareSize = 30;
-var stepSpeed = 500;
+var stepSpeed = 150;
 
 /*-------------- Game Functions ---------- */
 
@@ -274,10 +274,10 @@ function drawField() {
 document.addEventListener('DOMContentLoaded', setup, false);
 
 //Desktop Controls
-//document.onkeydown = function(e) {
-//    e = e || window.event;
-//    var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
-//    if([37,38,39,40].includes(parseInt(charCode))) {
-//        snake.direction = directions[charCode.toString()];
-//    }
-//};
+document.onkeydown = function(e) {
+    e = e || window.event;
+    var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
+    if([37,38,39,40].includes(parseInt(charCode))) {
+        snake.direction = directions[charCode.toString()];
+    }
+};
