@@ -2,8 +2,9 @@
 //TODO: food can be created in snake
 
 /*--------- Variables --------- */
-
-var fieldSize = 15*13;
+var rows = 13;
+var columns = 15;
+var fieldSize = rows * columns;
 var directions = { 38: "up", 40: "down", 37 : "left", 39: "right"};
 
 var snake = {
@@ -14,10 +15,11 @@ var snake = {
     tail : {},
 };
 
+var colors;
 var gameLoop;
 var foodField;
 var ateFood;
-var stepSpeed = 500;
+var stepSpeed = 150;
 
 /*-------------- Game Functions ---------- */
 
@@ -25,6 +27,7 @@ function addFieldToBody(field) {
     snake.queue.unshift(field);
     snake.ids.unshift(field.id);
     field.classList.add("snake");
+//    field.classList.remove("field");
 }
 
 function setupHead(field) {
@@ -54,6 +57,7 @@ function removeTail() {
     snake.ids.pop();
     snake.tail.classList.remove("tail");
     snake.tail.classList.remove("snake");
+//    snake.tail.style["background-color"] = "white";
     makeTail();
 }
 
@@ -120,50 +124,84 @@ function getNextHead() {
     return nextHead;
 }
 
-function moveSnake() {
-    var nextHead = getNextHead();
+function moveSnake(nextHead) {
     removeHead();
-    
     makeHead(nextHead);
     if (!ateFood) {
         removeTail();
     }
 }
 
-function checkCollision() {
-    if (snake.queue.length > 1 && snake.ids.lastIndexOf(snake.head.id) > 0) {
-        clearInterval(gameLoop);
-        alert("You collided. Game Over.");
+function colorSnake() {
+    for (var i = 1; i < snake.queue.length; i++) {
+        snake.queue[i].style["background-color"] = "rgb(" + colors[0] + ","+ (colors[1] + i) + "," + colors[2] + ")";
     }
 }
 
-function checkFood() {
-    ateFood = snake.head.id === foodField.id;
+function checkCollision() {
+    if ((snake.queue.length > 1 && snake.ids.lastIndexOf(snake.head.id) > 0)) {
+        clearInterval(gameLoop);
+        alert("You collided. Game Over.");
+    }
+    var dir = snake.head.getAttribute("dir");
+    if (dir && dir === snake.direction) {
+        clearInterval(gameLoop);
+        alert("You collided with border. Game Over.");
+    }
+}
+
+function checkFood(nextHead) {
+    ateFood = nextHead.id === foodField.id;
     if(ateFood) {
         removeFoodClass();
-        addFieldToBody(foodField);
         createFood();
     }
 }
 
 function initGameLoop() {
     gameLoop = setInterval(function() {
-        moveSnake();
         checkCollision();
-        checkFood();
+        var nextHead = getNextHead();
+        checkFood(nextHead);
+        moveSnake(nextHead);
+//        colorSnake();
     }, stepSpeed);
+}
+
+function getBaseColor() {
+    var rgb = window.getComputedStyle(snake.head).color;
+    colors = rgb.replace("rgb(", '').replace(")", '').split(', ');
+    colors[0] = parseInt(colors[0]);
+    colors[1] = parseInt(colors[1]);
+    colors[2] = parseInt(colors[2]);
 }
 
 function setup() {
     drawField();
+    markBorder();
     initSnake();
+    getBaseColor();
     createFood();
     initGameLoop();
 };
-
-function main() {
-    setup();
-};
+    
+function markBorder() {
+    var fields = document.getElementsByClassName("field");
+    for(var i = 0; i < fieldSize; i++) {
+        if (i < 15) {
+            fields[i].setAttribute("dir", "up");
+        }
+        if (i % 15 === 0) {
+            fields[i].setAttribute("dir", "left");
+        }
+        if (i % 15 === 14) {
+            fields[i].setAttribute("dir", "right");
+        }
+        if (i > fieldSize-rows) {
+            fields[i].setAttribute("dir", "down");
+        }
+    }
+}
 
 function drawField() {
     var body = document.body;
@@ -172,13 +210,12 @@ function drawField() {
         div.id = i;
         div.setAttribute("row", Math.floor(i / 15) + 1);
         div.setAttribute("column", i % 15 + 1);
-        div.setAttribute("tail", false);
         div.classList.add("field");
         body.appendChild(div);
     }
 };
 
-document.addEventListener('DOMContentLoaded', main, false);
+document.addEventListener('DOMContentLoaded', setup, false);
 document.onkeydown = function(e) {
     e = e || window.event;
     var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
