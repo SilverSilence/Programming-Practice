@@ -87,10 +87,10 @@ function removeFoodClass() {
 }
 
 function createFood() {
-    var fieldId;
+     var fieldId;
      while (true) { 
         fieldId = Math.floor(Math.random() * (fieldSize+1));
-        if (!snake.ids.includes(fieldId)) {
+        if (!snake.ids.includes(fieldId.toString())) {
             break;
         }
     }
