@@ -2,14 +2,19 @@
 var rows = 20;
 var columns = 30;
 var fieldSize = rows * columns;
-var directions = { 38: "up", 40: "down", 37 : "left", 39: "right"};
+var directions = {
+    38: "up",
+    40: "down",
+    37: "left",
+    39: "right"
+};
 
 var snake = {
-    direction : "up",
-    queue : [],
-    ids : [],
-    head : {},
-    tail : {},
+    direction: "up",
+    queue: [],
+    ids: [],
+    head: {},
+    tail: {},
 };
 
 var colors;
@@ -45,7 +50,7 @@ function getFieldById(id) {
 }
 
 function makeTail() {
-    var newLast = snake.queue[snake.queue.length-1];
+    var newLast = snake.queue[snake.queue.length - 1];
     newLast.classList.add("tail");
     snake.tail = newLast;
 }
@@ -77,7 +82,7 @@ function bodyWidth() {
 }
 
 function initSnake() {
-    var center = document.getElementById(Math.floor((fieldSize + columns)/2 ));
+    var center = document.getElementById(Math.floor((fieldSize + columns) / 2));
     setupHead(center);
     setupTail(center);
     snake.queue.pop(); //remove duplicate
@@ -89,9 +94,9 @@ function removeFoodClass() {
 }
 
 function createFood() {
-     var fieldId;
-     while (true) { 
-        fieldId = Math.floor(Math.random() * (fieldSize+1));
+    var fieldId;
+    while (true) {
+        fieldId = Math.floor(Math.random() * (fieldSize + 1));
         if (!snake.ids.includes(fieldId.toString())) {
             break;
         }
@@ -106,22 +111,22 @@ function createFood() {
 function getNextHead() {
     var nextHead;
     var head = snake.head;
-    switch(snake.direction) {
-        case "up" :
-            nextHead = document.getElementById(parseInt(head.id) - columns);
-            break;
-        case "down":
-            nextHead = document.getElementById(parseInt(head.id) + columns);
-            break;
-        case "left":
-            nextHead = document.getElementById(parseInt(head.id) - 1);
-            break;
-        case "right":
-            nextHead = document.getElementById(parseInt(head.id) + 1);
-            break;
-        default:
-            alert("Direction error.");
-            break;
+    switch (snake.direction) {
+    case "up":
+        nextHead = document.getElementById(parseInt(head.id) - columns);
+        break;
+    case "down":
+        nextHead = document.getElementById(parseInt(head.id) + columns);
+        break;
+    case "left":
+        nextHead = document.getElementById(parseInt(head.id) - 1);
+        break;
+    case "right":
+        nextHead = document.getElementById(parseInt(head.id) + 1);
+        break;
+    default:
+        alert("Direction error.");
+        break;
     }
     return nextHead;
 }
@@ -140,7 +145,7 @@ Not in use
 */
 function colorSnake() {
     for (var i = 1; i < snake.queue.length; i++) {
-        snake.queue[i].style["background-color"] = "rgb(" + colors[0] + ","+ (colors[1] + i) + "," + colors[2] + ")";
+        snake.queue[i].style["background-color"] = "rgb(" + colors[0] + "," + (colors[1] + i) + "," + colors[2] + ")";
     }
 }
 
@@ -158,19 +163,19 @@ function checkCollision() {
 
 function checkFood(nextHead) {
     ateFood = nextHead.id === foodField.id;
-    if(ateFood) {
+    if (ateFood) {
         removeFoodClass();
         createFood();
     }
 }
 
 function initGameLoop() {
-    gameLoop = setInterval(function() {
+    gameLoop = setInterval(function () {
         checkCollision();
         var nextHead = getNextHead();
         checkFood(nextHead);
         moveSnake(nextHead);
-//        colorSnake();
+        //        colorSnake();
     }, stepSpeed);
 }
 
@@ -190,27 +195,39 @@ Tilt and Tap Code
 */
 function left() {
     snake.direction = "left";
+    console.log(snake.direction);
 }
 
 function right() {
     snake.direction = "right";
+    console.log(snake.direction);
 }
 
 function up() {
     snake.direction = "up";
+    console.log(snake.direction);
 }
 
 function down() {
     snake.direction = "down";
+    console.log(snake.direction);
 }
 
 
-function setupTat () {
+function setupTat() {
     tat = new tiltandtap({
-        tiltLeft: { callback : left},
-        tiltRight: { callback : right},
-        tiltUp: { callback : up},
-        tiltRight: { callback : down},
+        tiltLeft: {
+            callback: left
+        },
+        tiltRight: {
+            callback: right
+        },
+        tiltUp: {
+            callback: up
+        },
+        tiltRight: {
+            callback: down
+        },
     });
 }
 
@@ -224,21 +241,17 @@ function setup() {
     createFood();
     initGameLoop();
 };
-    
+
 function markBorder() {
     var fields = document.getElementsByClassName("field");
-    for(var i = 0; i < fieldSize; i++) {
+    for (var i = 0; i < fieldSize; i++) {
         if (i < columns) {
             fields[i].setAttribute("dir", "up");
-        }
-        else if (i % columns === 0) {
+        } else if (i % columns === 0) {
             fields[i].setAttribute("dir", "left");
-        }
-        else if (i % columns === (columns-1)) {
+        } else if (i % columns === (columns - 1)) {
             fields[i].setAttribute("dir", "right");
-            console.log(i, i % columns);
-        }
-        else if (i > fieldSize-rows) {
+        } else if (i > fieldSize - rows) {
             fields[i].setAttribute("dir", "down");
         }
     }
