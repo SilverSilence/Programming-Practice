@@ -1,55 +1,57 @@
-var framerate = 15;
+var framerate = 30;
 var intervalId;
+
+var canvas = document.getElementById("world");
+var ctx = canvas.getContext('2d');
+ctx.fillStyle = "aqua";
 
 /*--------------- OBSTACLES ----------- */
 
-var obstacleSpeed = 1;
+var obstacleSpeed = 3;
 var obstacleSpawnCounter = 0;
-var obstacleSpawnRate = 150; //1000 / framerate --> 1 obstacle / second
+var obstacleSpawnRate = 50; //1000 / framerate --> 1 obstacle / second
+
+var obstacleList = [];
 
 //Height is 400px. If you want at least half of it to be open, make the obstacle occupy 200px.
 function Obstacle() {
-    this.lengthTop = Math.random() * 100 + 1;
+    this.lengthTop = Math.round(Math.random() * 100 + 1); //max length is 100
     this.lengthBot = 200 - this.lengthTop;
 }
 
 function createObstacle() {
     var obstacle = new Obstacle();
 
-    var divTop = document.createElement("div");
-    var divBot = document.createElement("div");
+    //top left corner of bottom obstacle
+    ctx.fillRect(980, 400 - obstacle.lengthBot, 20, obstacle.lengthBot);
 
-    divBot.style["height"] = obstacle.lengthBot + "px";
-    divTop.style["height"] = obstacle.lengthTop + "px";
+    //position of top obstacle (right corner)
+    ctx.fillRect(980, 0, 20, obstacle.lengthTop);
 
-    divBot.style["margin-left"] = 980 + "px";
-    divTop.style["margin-left"] = 980 + "px";
-
-    divBot.style["margin-top"] = 400 - obstacle.lengthBot + "px";
-
-    divBot.classList.add("obstacle");
-    divTop.classList.add("obstacle");
-
-    document.body.appendChild(divBot);
-    document.body.appendChild(divTop);
+    obstacleList.unshift([980, obstacle.lengthBot, "bot"]);
+    obstacleList.unshift([980, obstacle.lengthTop, "top"]);
 }
 
 function moveObstacles() {
     var nextPosition;
-    var obstacles = document.getElementsByClassName("obstacle");
-    for (var i = 0; i < obstacles.length; i++) {
-        nextPosition = parseInt(obstacles[i].style["margin-left"]) - obstacleSpeed;
-        if (nextPosition < 0) {
-            obstacles[i].parentNode.removeChild(obstacles[i]);
+    var obstacle, yCoordinate;
+    for (var i = 0; i < obstacleList.length; i++) {
+        obstacle = obstacleList[i];
+
+        yCoordinate = obstacle[2] === "bot" ? 400 - obstacle[1] : 0;
+        ctx.clearRect(obstacle[0], yCoordinate, 20, obstacle[1]);
+
+        //update position
+        obstacle[0] -= obstacleSpeed;
+        if (obstacle[0] < 0) {
+            obstacleList.splice(i, 1);
         } else {
-            obstacles[i].style["margin-left"] = nextPosition + "px";
+            ctx.fillRect(obstacle[0], yCoordinate, 20, obstacle[1]);
         }
     }
 }
 
 /*----------------- BIRD -------------- */
-
-var birdDiv = document.getElementById("bird");
 
 function Bird() {
     this.speedY = 0.0;
@@ -64,31 +66,50 @@ Bird.prototype.jump = function () {
 var bird = new Bird(); //could have been made with a singleton but doesn't matter all that much.
 
 /*----------------- WORLD -------------- */
-var gravity = 0.5;
+var gravity = 1;
 
-//Returns true if the two given rectangles intersect
-//NOTE: might be worth testing with clientOffsets instead of 'boundClientRect'.
-function intersectRect(r1, r2) {
-    return !(r2.left > r1.right ||
-        r2.right < r1.left ||
-        r2.top > r1.bottom ||
-        r2.bottom < r1.top);
+function intersectRect(obstacle) {
+
+    //check x
+    if (obstacle[0] > bird.positionX + 20) { //to the right
+        return false;
+    }
+    if (obstacle[0] + 20 < bird.positionX) { //to the left
+        return false;
+    }
+    
+    var isBot = obstacle[2] === "bot";
+    
+    if (isBot) {
+        if (400 - bird.positionY - 20 < obstacle[1]) {
+            return true;
+        }
+    } else {
+        if (bird.positionY < obstacle[1]) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function checkCollission() {
-    var collided = false;
-    var rectBird = birdDiv.getBoundingClientRect();
-    var obstacles = document.getElementsByClassName("obstacle");
-    for (var i = 0; i < obstacles.length; i++) {
-        collided = intersectRect(rectBird, obstacles[i].getBoundingClientRect());
+    var obstacle, collided = false;
+
+    for (var i = 1; i < obstacleList.length; i++) { //could be improved by only checking the "first" 4
+        obstacle = obstacleList[i];
+
+        collided = intersectRect(obstacle);
+
         if (collided) {
             clearInterval(intervalId);
-            alert("You lost.");
+            alert("You collided. Game Over");
         }
     }
 }
 
 function updateStats() {
+    ctx.clearRect(bird.positionX, bird.positionY, 20, 20);
+
     bird.speedY += gravity;
     bird.positionY += bird.speedY;
 
@@ -96,22 +117,25 @@ function updateStats() {
     bird.positionY = 0 > bird.positionY ? 0 : bird.positionY;
     //Don't fall through the ground
     bird.positionY = Math.min(bird.positionY, 380);
-    birdDiv.style["margin-top"] = bird.positionY + "px";
 
     //Don't let gravity stack speed when on ground
     if (bird.positionY === 380) {
         bird.speedY = 0;
     }
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(bird.positionX, bird.positionY, 20, 20);
+    ctx.fillStyle = "aqua";
 }
 
 function initGameLoop() {
     intervalId = setInterval(function () {
         updateStats();
-        obstacleSpawnCounter++;
         obstacleSpawnCounter = obstacleSpawnCounter % obstacleSpawnRate;
         if (obstacleSpawnCounter === 0) {
             createObstacle();
         }
+        obstacleSpawnCounter++;
         moveObstacles();
         checkCollission();
     }, framerate);
